@@ -25,6 +25,7 @@ use commands::{
     sync::SyncCmd,
     tags::TagsCmd,
     transactions::TransactionCmd,
+    new_pool::NewPoolCmd,
 };
 
 use self::utils::load_config_file;
@@ -35,10 +36,10 @@ mod info;
 mod utils;
 
 /// Config file name.
-const CLIENT_CONFIG_FILE_NAME: &str = "miden-client.toml";
+const CLIENT_CONFIG_FILE_NAME: &str = "arcane-client.toml";
 
 /// Client binary name.
-pub const CLIENT_BINARY_NAME: &str = "miden";
+pub const CLIENT_BINARY_NAME: &str = "arcane";
 
 /// Root CLI struct.
 #[derive(Parser, Debug)]
@@ -64,6 +65,7 @@ pub enum Command {
     Init(InitCmd),
     Notes(NotesCmd),
     Sync(SyncCmd),
+    NewPool(NewPoolCmd),
     /// View a summary of the current client state.
     Info,
     Tags(TagsCmd),
@@ -138,6 +140,7 @@ impl Cli {
             Command::Send(send) => send.execute(client).await,
             Command::Swap(swap) => swap.execute(client).await,
             Command::ConsumeNotes(consume_notes) => consume_notes.execute(client).await,
+            Command::NewPool(new_pool) => new_pool.execute(client).await,
         }
     }
 }

@@ -2,15 +2,10 @@ use std::{io, sync::Arc};
 
 use clap::{Parser, ValueEnum};
 use miden_client::{
-    accounts::AccountId,
-    assets::{FungibleAsset, NonFungibleDeltaAction},
-    crypto::{Digest, FeltRng},
-    notes::{build_swap_tag, get_input_note_with_id_prefix, NoteType as MidenNoteType},
-    transactions::{
+    accounts::{Account, AccountId}, assets::{FungibleAsset, NonFungibleDeltaAction}, crypto::{Digest, FeltRng}, notes::{build_swap_tag, get_input_note_with_id_prefix, NoteId, NoteType as MidenNoteType}, store::AccountRecord, transactions::{
         PaymentTransactionData, SwapTransactionData, TransactionRequest, TransactionRequestBuilder,
         TransactionResult,
-    },
-    Client,
+    }, Client
 };
 use miden_tx_prover::RemoteTransactionProver;
 use tracing::info;
@@ -28,6 +23,8 @@ pub enum NoteType {
     Public,
     Private,
 }
+
+const POOL_ACCOUNT_CODE_COMMITMENT: &str = "0x4073975a15574cefcb2d33a1c57a052eb2c425d164f41c6958bf1531fb774e02";
 
 impl From<&NoteType> for MidenNoteType {
     fn from(note_type: &NoteType) -> Self {
@@ -78,14 +75,16 @@ impl MintCmd {
         .map_err(|err| err.to_string())?
         .build();
 
-        execute_transaction(
+        let _ = execute_transaction(
             &mut client,
             fungible_asset.faucet_id(),
             transaction_request,
             force,
             self.delegate_proving,
         )
-        .await
+        .await?;
+
+        Ok(())
     }
 }
 
@@ -149,14 +148,16 @@ impl SendCmd {
         .map_err(|err| err.to_string())?
         .build();
 
-        execute_transaction(
+        let _ = execute_transaction(
             &mut client,
             sender_account_id,
             transaction_request,
             force,
             self.delegate_proving,
         )
-        .await
+        .await?;
+
+        Ok(())
     }
 }
 
@@ -290,35 +291,48 @@ impl ConsumeNotesCmd {
             authenticated_notes.extend(consumable_notes.iter().map(|(note, _)| note.id()));
         }
 
+        let account = client.get_account(account_id).await?;
+
+
         if authenticated_notes.is_empty() && unauthenticated_notes.is_empty() {
             return Err(format!("No input notes were provided and the store does not contain any notes consumable by {account_id}"));
         }
 
-        let transaction_request = TransactionRequestBuilder::consume_notes(authenticated_notes)
-            .with_unauthenticated_input_notes(unauthenticated_notes)
-            .build();
+        let mut transaction_request_builder = TransactionRequestBuilder::consume_notes(authenticated_notes)
+            .with_unauthenticated_input_notes(unauthenticated_notes);
 
-        execute_transaction(
+
+        if let Some(record) = account {
+            if record.account().code().commitment() == Digest::try_from(POOL_ACCOUNT_CODE_COMMITMENT).unwrap() {
+                transaction_request_builder = transaction_request_builder.without_script();
+            }
+        }
+
+        let transaction_request = transaction_request_builder.build();
+
+        let _ = execute_transaction(
             &mut client,
             account_id,
             transaction_request,
             force,
             self.delegate_proving,
         )
-        .await
+        .await?;
+
+        Ok(())
     }
 }
 
 // EXECUTE TRANSACTION
 // ================================================================================================
 
-async fn execute_transaction(
+pub async fn execute_transaction(
     client: &mut Client<impl FeltRng>,
     account_id: AccountId,
     transaction_request: TransactionRequest,
     force: bool,
     delegated_proving: bool,
-) -> Result<(), String> {
+) -> Result<Vec<NoteId>, String> {
     println!("Executing transaction...");
     let transaction_execution_result =
         client.new_transaction(account_id, transaction_request).await?;
@@ -332,7 +346,7 @@ async fn execute_transaction(
 
         if proceed_str.trim().to_lowercase() != "y" {
             println!("Transaction was cancelled.");
-            return Ok(());
+            return Ok(vec![]);
         }
     }
 
@@ -370,7 +384,7 @@ async fn execute_transaction(
         output_notes.iter().for_each(|note_id| println!("\t- {}", note_id));
     }
 
-    Ok(())
+    Ok(output_notes)
 }
 
 fn print_transaction_details(transaction_result: &TransactionResult) -> Result<(), String> {

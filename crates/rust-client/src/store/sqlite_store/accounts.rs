@@ -135,7 +135,7 @@ impl SqliteStore {
         conn: &mut Connection,
         account: &Account,
         account_seed: Option<Word>,
-        auth_info: &AuthSecretKey,
+        auth_info: Option<AuthSecretKey>,
     ) -> Result<(), StoreError> {
         let tx = conn.transaction()?;
 
@@ -143,7 +143,9 @@ impl SqliteStore {
         insert_account_storage(&tx, account.storage())?;
         insert_account_asset_vault(&tx, account.vault())?;
         insert_account_record(&tx, account, account_seed)?;
-        insert_account_auth(&tx, account.id(), auth_info)?;
+        if let Some(auth_info) = auth_info {
+            insert_account_auth(&tx, account.id(), &auth_info)?;
+        }
 
         Ok(tx.commit()?)
     }

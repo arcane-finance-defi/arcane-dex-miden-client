@@ -246,7 +246,7 @@ pub trait Store: Send + Sync {
         &self,
         account: &Account,
         account_seed: Option<Word>,
-        auth_info: &AuthSecretKey,
+        auth_info: Option<AuthSecretKey>,
     ) -> Result<(), StoreError>;
 
     /// Upserts the account code for a foreign account. This value will be used as a cache of known

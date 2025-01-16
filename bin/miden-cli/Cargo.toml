@@ -13,7 +13,7 @@ rust-version.workspace = true
 edition.workspace = true
 
 [[bin]]
-name = "miden"
+name = "arcane"
 path = "src/main.rs"
 
 [features]
@@ -42,3 +42,4 @@ toml = { version = "0.8" }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3" }
 miden-tx-prover =  { workspace = true }
+dex-poc = { workspace = true }

@@ -1,5 +1,7 @@
 //! Contains structures and functions related to transaction creation.
 
+use std::println;
+
 use alloc::{
     collections::{BTreeMap, BTreeSet},
     string::{String, ToString},
@@ -24,7 +26,7 @@ use super::{
 };
 
 mod builder;
-pub use builder::{PaymentTransactionData, SwapTransactionData, TransactionRequestBuilder};
+pub use builder::{PaymentTransactionData, SwapTransactionData, TransactionRequestBuilder, FundPoolTransactionData};
 
 mod foreign;
 pub use foreign::{ForeignAccount, ForeignAccountInputs};
@@ -48,6 +50,7 @@ pub enum TransactionScriptTemplate {
     /// depend on the capabilities of the account the transaction request will be applied to.
     /// For example, for Basic Wallets, this may involve invoking `create_note` procedure.
     SendNotes(Vec<PartialNote>),
+    WithoutAuthentication
 }
 
 /// Specifies a transaction request that can be executed by an account.
@@ -160,7 +163,7 @@ impl TransactionRequest {
 
     /// Converts the [TransactionRequest] into [TransactionArgs] in order to be executed by a Miden
     /// host.
-    pub(super) fn into_transaction_args(self, tx_script: TransactionScript) -> TransactionArgs {
+    pub(super) fn into_transaction_args(self, tx_script: Option<TransactionScript>) -> TransactionArgs {
         let note_args = self.get_note_args();
         let TransactionRequest {
             expected_output_notes,
@@ -169,7 +172,7 @@ impl TransactionRequest {
             ..
         } = self;
 
-        let mut tx_args = TransactionArgs::new(Some(tx_script), note_args.into(), advice_map);
+        let mut tx_args = TransactionArgs::new(tx_script, note_args.into(), advice_map);
 
         tx_args.extend_expected_output_notes(expected_output_notes.into_values());
         tx_args.extend_merkle_store(merkle_store.inner_nodes());
@@ -180,14 +183,17 @@ impl TransactionRequest {
     pub(crate) fn build_transaction_script(
         &self,
         account_capabilities: AccountCapabilities,
-    ) -> Result<TransactionScript, TransactionRequestError> {
+    ) -> Result<Option<TransactionScript>, TransactionRequestError> {
         match &self.script_template {
-            Some(TransactionScriptTemplate::CustomScript(script)) => Ok(script.clone()),
+            Some(TransactionScriptTemplate::CustomScript(script)) => Ok(Some(script.clone())),
             Some(TransactionScriptTemplate::SendNotes(notes)) => {
                 let tx_script_builder =
                     TransactionScriptBuilder::new(account_capabilities, self.expiration_delta);
 
-                Ok(tx_script_builder.build_send_notes_script(notes)?)
+                Ok(Some(tx_script_builder.build_send_notes_script(notes)?))
+            },
+            Some(TransactionScriptTemplate::WithoutAuthentication) => {
+                Ok(None)
             },
             None => {
                 if self.input_notes.is_empty() {
@@ -196,7 +202,7 @@ impl TransactionRequest {
                     let tx_script_builder =
                         TransactionScriptBuilder::new(account_capabilities, self.expiration_delta);
 
-                    Ok(tx_script_builder.build_auth_script()?)
+                    Ok(Some(tx_script_builder.build_auth_script()?))
                 }
             },
         }
@@ -219,6 +225,9 @@ impl Serializable for TransactionRequest {
             Some(TransactionScriptTemplate::SendNotes(notes)) => {
                 target.write_u8(2);
                 notes.write_into(target);
+            },
+            Some(TransactionScriptTemplate::WithoutAuthentication) => {
+                target.write_u8(3);
             },
         }
         self.expected_output_notes.write_into(target);
@@ -244,6 +253,9 @@ impl Deserializable for TransactionRequest {
             2 => {
                 let notes = Vec::<PartialNote>::read_from(source)?;
                 Some(TransactionScriptTemplate::SendNotes(notes))
+            },
+            3 => {
+                Some(TransactionScriptTemplate::WithoutAuthentication)
             },
             _ => {
                 return Err(DeserializationError::InvalidValue(

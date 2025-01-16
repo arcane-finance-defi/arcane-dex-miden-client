@@ -239,13 +239,13 @@ impl Store for SqliteStore {
         &self,
         account: &Account,
         account_seed: Option<Word>,
-        auth_info: &AuthSecretKey,
+        auth_info: Option<AuthSecretKey>,
     ) -> Result<(), StoreError> {
         let account = account.clone();
         let auth_info = auth_info.clone();
 
         self.interact_with_connection(move |conn| {
-            SqliteStore::insert_account(conn, &account, account_seed, &auth_info)
+            SqliteStore::insert_account(conn, &account, account_seed, auth_info)
         })
         .await
     }

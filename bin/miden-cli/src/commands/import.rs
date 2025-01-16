@@ -76,7 +76,7 @@ async fn import_account(
         .add_account(
             &account_data.account,
             account_data.account_seed,
-            &account_data.auth_secret_key,
+            Some(account_data.auth_secret_key),
             overwrite,
         )
         .await?;

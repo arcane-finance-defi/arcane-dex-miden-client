@@ -47,7 +47,7 @@ impl<R: FeltRng> Client<R> {
         &mut self,
         account: &Account,
         account_seed: Option<Word>,
-        auth_secret_key: &AuthSecretKey,
+        auth_secret_key: Option<AuthSecretKey>,
         overwrite: bool,
     ) -> Result<(), ClientError> {
         let account_seed = if account.is_new() {
@@ -266,14 +266,14 @@ pub mod tests {
         let key_pair = SecretKey::new();
 
         assert!(client
-            .add_account(&account, None, &AuthSecretKey::RpoFalcon512(key_pair.clone()), false)
+            .add_account(&account, None, Some(&AuthSecretKey::RpoFalcon512(key_pair.clone())), false)
             .await
             .is_err());
         assert!(client
             .add_account(
                 &account,
                 Some(Word::default()),
-                &AuthSecretKey::RpoFalcon512(key_pair),
+                Some(&AuthSecretKey::RpoFalcon512(key_pair.clone())),
                 false
             )
             .await
@@ -292,7 +292,7 @@ pub mod tests {
                 .add_account(
                     &account_data.account,
                     account_data.account_seed,
-                    &account_data.auth_secret_key,
+                    Some(&account_data.auth_secret_key),
                     false,
                 )
                 .await

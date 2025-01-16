@@ -216,7 +216,7 @@ impl WebStore {
         &self,
         account: &Account,
         account_seed: Option<Word>,
-        auth_info: &AuthSecretKey,
+        auth_info: Option<AuthSecretKey>,
     ) -> Result<(), StoreError> {
         insert_account_code(account.code()).await.unwrap();
 
@@ -226,7 +226,9 @@ impl WebStore {
 
         insert_account_record(account, account_seed).await.unwrap();
 
-        insert_account_auth(account.id(), auth_info).await.unwrap();
+        if let Some(auth_info) = auth_info {
+            insert_account_auth(account.id(), &auth_info).await.unwrap();
+        }
 
         Ok(())
     }

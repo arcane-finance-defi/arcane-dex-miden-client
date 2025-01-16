@@ -19,7 +19,7 @@ use super::prepare_word;
 // ============================================================================================
 pub(crate) struct AccountCapabilities {
     pub account_id: AccountId,
-    pub auth: AuthSecretKey,
+    pub auth: Option<AuthSecretKey>,
     pub interfaces: AccountInterface,
 }
 
@@ -190,9 +190,10 @@ impl TransactionScriptBuilder {
         includes.push_str(self.account_capabilities.interfaces.script_includes());
 
         match self.account_capabilities.auth {
-            AuthSecretKey::RpoFalcon512(_) => {
+            Some(AuthSecretKey::RpoFalcon512(_)) => {
                 includes.push_str("use.miden::contracts::auth::basic->auth_tx\n");
             },
+            None => {}
         }
 
         if self.expiration_delta.is_some() {
@@ -205,7 +206,8 @@ impl TransactionScriptBuilder {
     /// Returns a string with the authentication procedure call for the script.
     fn script_authentication(&self) -> String {
         match self.account_capabilities.auth {
-            AuthSecretKey::RpoFalcon512(_) => "call.auth_tx::auth_tx_rpo_falcon512\n".to_string(),
+            Some(AuthSecretKey::RpoFalcon512(_)) => "call.auth_tx::auth_tx_rpo_falcon512\n".to_string(),
+            None => String::new(),
         }
     }
 

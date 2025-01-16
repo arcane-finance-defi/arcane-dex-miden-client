@@ -154,7 +154,7 @@ impl Store for WebStore {
         &self,
         account: &Account,
         account_seed: Option<Word>,
-        auth_info: &AuthSecretKey,
+        auth_info: Option<AuthSecretKey>,
     ) -> Result<(), StoreError> {
         self.insert_account(account, account_seed, auth_info).await
     }

@@ -92,7 +92,7 @@ impl NewFaucetCmd {
             .map_err(|err| format!("failed to create faucet: {}", err))?;
 
         client
-            .add_account(&new_account, Some(seed), &AuthSecretKey::RpoFalcon512(key_pair), false)
+            .add_account(&new_account, Some(seed), Some(AuthSecretKey::RpoFalcon512(key_pair)), false)
             .await?;
 
         println!("Succesfully created new faucet.");
@@ -142,7 +142,7 @@ impl NewWalletCmd {
             .map_err(|err| format!("failed to create wallet: {}", err))?;
 
         client
-            .add_account(&new_account, Some(seed), &AuthSecretKey::RpoFalcon512(key_pair), false)
+            .add_account(&new_account, Some(seed), Some(AuthSecretKey::RpoFalcon512(key_pair)), false)
             .await?;
 
         println!("Succesfully created new wallet.");

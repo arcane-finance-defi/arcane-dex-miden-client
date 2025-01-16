@@ -18,6 +18,7 @@ use miden_objects::{
     vm::AdviceMap,
     Digest, Felt, FieldElement,
 };
+use dex_poc::notes::create_fund_note;
 
 use super::{
     ForeignAccount, ForeignAccountInputs, NoteArgs, TransactionRequest, TransactionRequestError,
@@ -99,6 +100,11 @@ impl TransactionRequestBuilder {
         for (note_id, argument) in notes {
             self.input_notes.insert(note_id, argument);
         }
+        self
+    }
+
+    pub fn without_script(mut self) -> Self {
+        self.script_template = Some(TransactionScriptTemplate::WithoutAuthentication);
         self
     }
 
@@ -364,6 +370,29 @@ impl TransactionRequestBuilder {
             .with_own_output_notes(vec![OutputNote::Full(created_note)])
     }
 
+    pub fn fund_pool(
+        fund_data: FundPoolTransactionData,
+        note_type: NoteType,
+        rng: &mut impl FeltRng,
+    ) -> Result<Self, TransactionRequestError> {
+        let FundPoolTransactionData {
+            assets,
+            sender_account_id,
+            pool_id,
+        } = fund_data;
+
+        let fund_note = create_fund_note(
+            sender_account_id,
+            pool_id,
+            assets.map(|asset| asset.into()).to_vec(),
+            note_type,
+            Felt::ZERO,
+            rng,
+        )?;
+
+        Self::new().with_own_output_notes(vec![OutputNote::Full(fund_note)])
+    }
+
     // FINALIZE BUILDER
     // --------------------------------------------------------------------------------------------
 
@@ -426,6 +455,31 @@ impl PaymentTransactionData {
 
     /// Returns the transaction's list of [Asset].
     pub fn assets(&self) -> &Vec<Asset> {
+        &self.assets
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FundPoolTransactionData {
+    pool_id: AccountId,
+    sender_account_id: AccountId,
+    assets: [FungibleAsset; 2],
+}
+
+impl FundPoolTransactionData {
+    pub fn new(pool_id: AccountId, sender_account_id: AccountId, assets: [FungibleAsset; 2]) -> Self {
+        Self { pool_id, sender_account_id, assets }
+    }
+
+    pub fn pool_id(&self) -> AccountId {
+        self.pool_id
+    }
+
+    pub fn sender_account_id(&self) -> AccountId {
+        self.sender_account_id
+    }
+
+    pub fn assets(&self) -> &[FungibleAsset; 2] {
         &self.assets
     }
 }

@@ -36,5 +36,5 @@ node_modules/
 *.iml
 *.ps1
 
-# Ignore files that spawn using `miden init`
-miden-client.toml
+# Ignore files that spawn using `arcane init`
+arcane-client.toml

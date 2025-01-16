@@ -41,6 +41,7 @@ mod request;
 pub use request::{
     NoteArgs, PaymentTransactionData, SwapTransactionData, TransactionRequest,
     TransactionRequestBuilder, TransactionRequestError, TransactionScriptTemplate,
+    FundPoolTransactionData,
 };
 
 mod script_builder;
@@ -704,7 +705,7 @@ impl<R: FeltRng> Client<R> {
         account_id: AccountId,
     ) -> Result<AccountCapabilities, ClientError> {
         let account: Account = self.get_account_or_error(account_id).await?.into();
-        let account_auth = self.get_account_auth_or_error(account_id).await?;
+        let account_auth = self.get_account_auth(account_id).await?;
 
         // TODO: we should check if the account actually exposes the interfaces we're trying to use
         let account_capabilities = match account.account_type() {
