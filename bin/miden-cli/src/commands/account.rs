@@ -9,7 +9,7 @@ use miden_client::{
 use crate::{
     config::CliConfig,
     create_dynamic_table,
-    utils::{load_config_file, load_faucet_details_map, parse_account_id, update_config},
+    utils::{load_config_file, load_faucet_details_map, parse_account_id, pool::is_pool_account, update_config},
     CLIENT_BINARY_NAME,
 };
 
@@ -96,6 +96,7 @@ async fn list_accounts<R: FeltRng>(client: Client<R>) -> Result<(), String> {
     let mut table =
         create_dynamic_table(&["Account ID", "Type", "Storage Mode", "Nonce", "Status"]);
     for (acc, _acc_seed) in accounts.iter() {
+        let account = client.get_account(acc.id()).await?.unwrap();
         let status = client
             .get_account(acc.id())
             .await?
@@ -105,7 +106,7 @@ async fn list_accounts<R: FeltRng>(client: Client<R>) -> Result<(), String> {
 
         table.add_row(vec![
             acc.id().to_string(),
-            account_type_display_name(&acc.id())?,
+            account_type_display_name(account.account())?,
             acc.id().storage_mode().to_string(),
             acc.nonce().as_int().to_string(),
             status,
@@ -139,7 +140,7 @@ pub async fn show_account<R: FeltRng>(
     table.add_row(vec![
         account.id().to_string(),
         account.hash().to_string(),
-        account_type_display_name(&account_id)?,
+        account_type_display_name(&account)?,
         account_id.storage_mode().to_string(),
         account.code().commitment().to_string(),
         account.vault().asset_tree().root().to_string(),
@@ -213,11 +214,15 @@ pub async fn show_account<R: FeltRng>(
 // HELPERS
 // ================================================================================================
 
-fn account_type_display_name(account_id: &AccountId) -> Result<String, String> {
-    Ok(match account_id.account_type() {
+fn account_type_display_name(account: &Account) -> Result<String, String> {
+    if is_pool_account(account)? {
+        return Ok("Pool".to_string());
+    }
+
+    Ok(match account.id().account_type() {
         AccountType::FungibleFaucet => {
             let faucet_details_map = load_faucet_details_map()?;
-            let token_symbol = faucet_details_map.get_token_symbol_or_default(account_id);
+            let token_symbol = faucet_details_map.get_token_symbol_or_default(&account.id());
 
             format!("Fungible faucet (token symbol: {token_symbol})")
         },

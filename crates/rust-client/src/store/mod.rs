@@ -16,7 +16,7 @@ use miden_objects::{
 };
 
 use crate::{
-    order::InsertOrderData, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
+    order::{InsertOrderData, OrderInfo}, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
 };
 
 /// Contains [ClientDataStore] to automatically implement [DataStore] for anything that implements
@@ -308,6 +308,8 @@ pub trait Store: Send + Sync {
     async fn insert_order(&self, order: InsertOrderData) -> Result<(), StoreError>;
 
     async fn find_order_result(&self, order_note_id: NoteId) -> Result<Option<Note>, StoreError>;
+
+    async fn get_order(&self, order_note_id: NoteId) -> Result<Option<OrderInfo>, StoreError>;
 }
 
 // CHAIN MMR NODE FILTER

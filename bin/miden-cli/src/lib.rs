@@ -15,7 +15,7 @@ use miden_client::{
 use rand::Rng;
 mod commands;
 use commands::{
-    account::AccountCmd, export::ExportCmd, import::ImportCmd, init::InitCmd, new_account::{NewFaucetCmd, NewWalletCmd}, new_order::NewOrderCmd, new_pool::NewPoolCmd, new_transactions::{ConsumeNotesCmd, MintCmd, SendCmd, SwapCmd}, notes::NotesCmd, sync::SyncCmd, tags::TagsCmd, transactions::TransactionCmd
+    account::AccountCmd, export::ExportCmd, import::ImportCmd, init::InitCmd, new_account::{NewFaucetCmd, NewWalletCmd}, new_order::NewOrderCmd, new_pool::NewPoolCmd, new_transactions::{ConsumeNotesCmd, MintCmd, SendCmd, SwapCmd}, notes::NotesCmd, order::OrderCmd, sync::SyncCmd, tags::TagsCmd, transactions::TransactionCmd
 };
 
 use self::utils::load_config_file;
@@ -48,6 +48,7 @@ pub struct Cli {
 #[derive(Debug, Parser)]
 pub enum Command {
     Account(AccountCmd),
+    Order(OrderCmd),
     NewFaucet(NewFaucetCmd),
     NewWallet(NewWalletCmd),
     Import(ImportCmd),
@@ -117,6 +118,7 @@ impl Cli {
         // Execute CLI command
         match &self.action {
             Command::Account(account) => account.execute(client).await,
+            Command::Order(order) => order.execute(client).await,
             Command::NewFaucet(new_faucet) => new_faucet.execute(client).await,
             Command::NewWallet(new_wallet) => new_wallet.execute(client).await,
             Command::Import(import) => import.execute(client).await,

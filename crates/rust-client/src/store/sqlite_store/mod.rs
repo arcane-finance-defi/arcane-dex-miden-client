@@ -20,7 +20,7 @@ use super::{
     OutputNoteRecord, Store, TransactionFilter,
 };
 use crate::{
-    order::InsertOrderData, store::StoreError, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
+    order::{InsertOrderData, OrderInfo}, store::StoreError, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
 };
 
 mod accounts;
@@ -343,6 +343,11 @@ impl Store for SqliteStore {
         let result = self.interact_with_connection(move |conn| SqliteStore::find_order_result(conn, order_note_id))
             .await?;
         Ok(result)
+    }
+
+    async fn get_order(&self, order_note_id: NoteId) -> Result<Option<OrderInfo>, StoreError> {
+        self.interact_with_connection(move |conn| SqliteStore::get_order(conn, order_note_id))
+            .await
     }
 }
 
