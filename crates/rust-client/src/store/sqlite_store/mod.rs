@@ -9,7 +9,7 @@ use deadpool_sqlite::{Config, Hook, HookError, Pool, Runtime};
 use miden_objects::{
     accounts::{Account, AccountCode, AccountHeader, AccountId, AuthSecretKey},
     crypto::merkle::{InOrderIndex, MmrPeaks},
-    notes::{NoteTag, Nullifier},
+    notes::{Note, NoteId, NoteTag, Nullifier},
     BlockHeader, Digest, Word,
 };
 use rusqlite::{vtab::array, Connection};
@@ -20,9 +20,7 @@ use super::{
     OutputNoteRecord, Store, TransactionFilter,
 };
 use crate::{
-    store::StoreError,
-    sync::{NoteTagRecord, StateSyncUpdate},
-    transactions::{TransactionRecord, TransactionStoreUpdate},
+    order::InsertOrderData, store::StoreError, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
 };
 
 mod accounts;
@@ -31,6 +29,7 @@ mod errors;
 mod notes;
 mod sync;
 mod transactions;
+mod orders;
 
 // SQLITE STORE
 // ================================================================================================
@@ -333,6 +332,17 @@ impl Store for SqliteStore {
     async fn get_unspent_input_note_nullifiers(&self) -> Result<Vec<Nullifier>, StoreError> {
         self.interact_with_connection(SqliteStore::get_unspent_input_note_nullifiers)
             .await
+    }
+
+    async fn insert_order(&self, order: InsertOrderData) -> Result<(), StoreError> {
+        self.interact_with_connection(move |conn| SqliteStore::insert_order(conn, order))
+            .await
+    }
+
+    async fn find_order_result(&self, order_note_id: NoteId) -> Result<Option<Note>, StoreError> {
+        let result = self.interact_with_connection(move |conn| SqliteStore::find_order_result(conn, order_note_id))
+            .await?;
+        Ok(result)
     }
 }
 

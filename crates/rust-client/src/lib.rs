@@ -14,6 +14,7 @@ pub mod rpc;
 pub mod store;
 pub mod sync;
 pub mod transactions;
+pub mod order;
 
 #[cfg(test)]
 pub mod mock;

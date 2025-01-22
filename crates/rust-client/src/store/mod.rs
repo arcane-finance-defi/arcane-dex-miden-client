@@ -11,13 +11,12 @@ use async_trait::async_trait;
 use miden_objects::{
     accounts::{Account, AccountCode, AccountHeader, AccountId, AuthSecretKey},
     crypto::merkle::{InOrderIndex, MmrPeaks},
-    notes::{NoteId, NoteTag, Nullifier},
+    notes::{Note, NoteId, NoteTag, Nullifier},
     BlockHeader, Digest, Word,
 };
 
 use crate::{
-    sync::{NoteTagRecord, StateSyncUpdate},
-    transactions::{TransactionRecord, TransactionStoreUpdate},
+    order::InsertOrderData, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
 };
 
 /// Contains [ClientDataStore] to automatically implement [DataStore] for anything that implements
@@ -305,6 +304,10 @@ pub trait Store: Send + Sync {
     /// - Storing new MMR authentication nodes.
     /// - Updating the tracked on-chain accounts.
     async fn apply_state_sync(&self, state_sync_update: StateSyncUpdate) -> Result<(), StoreError>;
+
+    async fn insert_order(&self, order: InsertOrderData) -> Result<(), StoreError>;
+
+    async fn find_order_result(&self, order_note_id: NoteId) -> Result<Option<Note>, StoreError>;
 }
 
 // CHAIN MMR NODE FILTER

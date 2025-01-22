@@ -1,7 +1,4 @@
 //! Contains structures and functions related to transaction creation.
-
-use std::println;
-
 use alloc::{
     collections::{BTreeMap, BTreeSet},
     string::{String, ToString},
@@ -26,7 +23,7 @@ use super::{
 };
 
 mod builder;
-pub use builder::{PaymentTransactionData, SwapTransactionData, TransactionRequestBuilder, FundPoolTransactionData};
+pub use builder::{PaymentTransactionData, SwapTransactionData, TransactionRequestBuilder, FundPoolTransactionData, CreateOrderTransactionData};
 
 mod foreign;
 pub use foreign::{ForeignAccount, ForeignAccountInputs};
@@ -325,7 +322,7 @@ pub enum TransactionRequestError {
     NoteNotFound(String),
     #[error("note creation error")]
     NoteCreationError(#[from] NoteError),
-    #[error("transaction script builder error")]
+    #[error(transparent)]
     TransactionScriptBuilderError(#[from] TransactionScriptBuilderError),
 }
 

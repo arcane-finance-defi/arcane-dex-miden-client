@@ -786,6 +786,7 @@ dependencies = [
 [[package]]
 name = "dex_poc"
 version = "0.1.0"
+source = "git+https://github.com/arcane-finance-defi/dex_poc#4c787a56a7d231cf816807f3ede2c7b8a55f255a"
 dependencies = [
  "miden-assembly",
  "miden-lib",

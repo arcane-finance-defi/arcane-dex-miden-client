@@ -3,7 +3,7 @@ use alloc::{boxed::Box, collections::BTreeMap, vec::Vec};
 use miden_objects::{
     accounts::{Account, AccountCode, AccountHeader, AccountId, AuthSecretKey},
     crypto::merkle::{InOrderIndex, MmrPeaks},
-    notes::Nullifier,
+    notes::{Note, NoteId, Nullifier},
     BlockHeader, Digest, Word,
 };
 use tonic::async_trait;
@@ -15,8 +15,7 @@ use super::{
     OutputNoteRecord, Store, StoreError, TransactionFilter,
 };
 use crate::{
-    sync::{NoteTagRecord, StateSyncUpdate},
-    transactions::{TransactionRecord, TransactionStoreUpdate},
+    order::InsertOrderData, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
 };
 
 pub mod accounts;
@@ -223,5 +222,13 @@ impl Store for WebStore {
 
     async fn get_unspent_input_note_nullifiers(&self) -> Result<Vec<Nullifier>, StoreError> {
         self.get_unspent_input_note_nullifiers().await
+    }
+
+    async fn insert_order(&self, order: InsertOrderData) -> Result<(), StoreError> {
+        unimplemented!()
+    }
+
+    async fn find_order_result(&self, order_note_id: NoteId) -> Result<Option<Note>, StoreError> {
+        unimplemented!()
     }
 }

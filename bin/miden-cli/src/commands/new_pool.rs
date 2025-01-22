@@ -1,12 +1,11 @@
 use std::time::Duration;
 
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use miden_client::{
     accounts::{
-        AccountBuilder, AccountStorageMode, AccountType
+        AccountBuilder, AccountType
     },
     transactions::{FundPoolTransactionData, TransactionRequestBuilder},
-    notes::NoteType as MidenNoteType,
     crypto::FeltRng,
     Client,
 };
@@ -14,39 +13,18 @@ use dex_poc::accounts::pool::PoolAccount;
 use tokio::time::sleep;
 
 use crate::{
-    commands::new_transactions::execute_transaction, 
-    utils::{get_input_acc_id_by_prefix_or_default, load_faucet_details_map, SHARED_TOKEN_DOCUMENTATION}, CLIENT_BINARY_NAME
+    utils::{
+        account::CliAccountStorageMode, 
+        get_input_acc_id_by_prefix_or_default, 
+        load_faucet_details_map, 
+        transaction::{
+            execute_transaction, 
+            NoteType
+        }, 
+        SHARED_TOKEN_DOCUMENTATION
+    }, 
+    CLIENT_BINARY_NAME
 };
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum CliAccountStorageMode {
-    Private,
-    Public,
-}
-
-impl From<CliAccountStorageMode> for AccountStorageMode {
-    fn from(cli_mode: CliAccountStorageMode) -> Self {
-        match cli_mode {
-            CliAccountStorageMode::Private => AccountStorageMode::Private,
-            CliAccountStorageMode::Public => AccountStorageMode::Public,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum NoteType {
-    Public,
-    Private,
-}
-
-impl From<&NoteType> for MidenNoteType {
-    fn from(note_type: &NoteType) -> Self {
-        match note_type {
-            NoteType::Public => MidenNoteType::Public,
-            NoteType::Private => MidenNoteType::Private,
-        }
-    }
-}
 
 #[derive(Debug, Parser, Clone)]
 /// Create a new pool account.

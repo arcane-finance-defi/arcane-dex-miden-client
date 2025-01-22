@@ -48,11 +48,6 @@ impl AccountInterface {
         let mut body = String::new();
 
         for partial_note in notes.iter() {
-            if partial_note.metadata().sender() != account_id {
-                return Err(TransactionScriptBuilderError::InvalidSenderAccount(
-                    partial_note.metadata().sender(),
-                ));
-            }
 
             body.push_str(&format!(
                 "

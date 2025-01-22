@@ -103,6 +103,7 @@ CREATE TABLE output_notes (
     metadata BLOB NOT NULL,                                 -- serialized metadata
     nullifier TEXT NULL,
     expected_height UNSIGNED INT NOT NULL,                  -- the block height after which the note is expected to be created
+    tag BLOB,                              
 -- TODO: normalize script data for output notes
 --     script_hash TEXT NULL,
     state_discriminant UNSIGNED INT NOT NULL,               -- state discriminant of the note, used to query by state
@@ -152,4 +153,15 @@ CREATE TABLE chain_mmr_nodes (
     id UNSIGNED BIG INT NOT NULL,   -- in-order index of the internal MMR node
     node BLOB NOT NULL,             -- internal node value (hash)
     PRIMARY KEY (id)
-)
+);
+
+CREATE TABLE orders (
+    note_id TEXT NOT NULL,
+    note_nullifier TEXT NOT NULL UNIQUE,
+    pool_id TEXT NOT NULL,
+    asset_in_faucet_id TEXT NOT NULL,
+    recipient_serial_number TEXT NOT NULL,
+    recipient_receiver_account_id TEXT NOT NULL,
+    response_note_tag BLOB NOT NULL,
+    PRIMARY KEY (note_id)
+);

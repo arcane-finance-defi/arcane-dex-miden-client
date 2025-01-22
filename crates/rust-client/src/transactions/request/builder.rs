@@ -13,12 +13,12 @@ use miden_objects::{
         merkle::{InnerNodeInfo, MerkleStore},
         rand::FeltRng,
     },
-    notes::{Note, NoteDetails, NoteExecutionMode, NoteId, NoteTag, NoteType},
+    notes::{Note, NoteAssets, NoteDetails, NoteExecutionMode, NoteId, NoteRecipient, NoteTag, NoteType},
     transaction::{OutputNote, TransactionScript},
     vm::AdviceMap,
     Digest, Felt, FieldElement,
 };
-use dex_poc::notes::create_fund_note;
+use dex_poc::notes::{create_fund_note, create_swap_note as create_order_note};
 
 use super::{
     ForeignAccount, ForeignAccountInputs, NoteArgs, TransactionRequest, TransactionRequestError,
@@ -393,6 +393,25 @@ impl TransactionRequestBuilder {
         Self::new().with_own_output_notes(vec![OutputNote::Full(fund_note)])
     }
 
+    pub fn create_order(
+        order_data: CreateOrderTransactionData,
+        note_type: NoteType,
+        rng: &mut impl FeltRng
+    ) -> Result<(Self, Note, NoteTag, NoteRecipient), TransactionRequestError> {
+        let CreateOrderTransactionData { sender_account_id, asset_in, asset_out } = order_data;
+
+        let (created_note, response_tag, payback_note_recipient) = create_order_note(
+            sender_account_id,
+            asset_in.into(),
+            asset_out,
+            note_type,
+            Felt::ZERO,
+            rng,
+        )?;
+
+        Ok((Self::new().with_own_output_notes(vec![OutputNote::Full(created_note.clone())])?, created_note, response_tag, payback_note_recipient))
+    }
+
     // FINALIZE BUILDER
     // --------------------------------------------------------------------------------------------
 
@@ -481,6 +500,31 @@ impl FundPoolTransactionData {
 
     pub fn assets(&self) -> &[FungibleAsset; 2] {
         &self.assets
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CreateOrderTransactionData {
+    sender_account_id: AccountId,
+    asset_in: FungibleAsset,
+    asset_out: AccountId,
+}
+
+impl CreateOrderTransactionData {
+    pub fn new(sender_account_id: AccountId, asset_in: FungibleAsset, asset_out: AccountId) -> Self {
+        Self { sender_account_id, asset_in, asset_out }
+    }
+
+    pub fn sender_account_id(&self) -> AccountId {
+        self.sender_account_id
+    }
+
+    pub fn asset_in(&self) -> &FungibleAsset {
+        &self.asset_in
+    }
+
+    pub fn asset_out(&self) -> &AccountId {
+        &self.asset_out
     }
 }
 

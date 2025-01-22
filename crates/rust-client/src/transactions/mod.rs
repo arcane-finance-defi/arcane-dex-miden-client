@@ -41,7 +41,7 @@ mod request;
 pub use request::{
     NoteArgs, PaymentTransactionData, SwapTransactionData, TransactionRequest,
     TransactionRequestBuilder, TransactionRequestError, TransactionScriptTemplate,
-    FundPoolTransactionData,
+    FundPoolTransactionData, CreateOrderTransactionData
 };
 
 mod script_builder;
@@ -391,12 +391,12 @@ impl<R: FeltRng> Client<R> {
 
         let tx_note_auth_hashes: BTreeSet<Digest> =
             notes_from_output(executed_transaction.output_notes())
-                .map(|note| note.hash())
+                .map(|note| note.id().into())
                 .collect();
 
         let missing_note_ids: Vec<NoteId> = output_notes
             .iter()
-            .filter_map(|n| (!tx_note_auth_hashes.contains(&n.hash())).then_some(n.id()))
+            .filter_map(|n| (!tx_note_auth_hashes.contains(&n.id().into())).then_some(n.id()))
             .collect();
 
         if !missing_note_ids.is_empty() {

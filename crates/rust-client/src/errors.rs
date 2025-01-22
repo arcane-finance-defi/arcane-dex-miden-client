@@ -62,22 +62,24 @@ pub enum ClientError {
     NoteRecordError(#[from] NoteRecordError),
     #[error("no consumable note for account {0}")]
     NoConsumableNoteForAccount(AccountId),
-    #[error("rpc api error")]
+    #[error(transparent)]
     RpcError(#[from] RpcError),
     #[error("note screener error")]
     NoteScreenerError(#[from] NoteScreenerError),
-    #[error("store error")]
+    #[error(transparent)]
     StoreError(#[from] StoreError),
-    #[error("transaction executor error")]
+    #[error(transparent)]
     TransactionExecutorError(#[from] TransactionExecutorError),
     #[error("transaction prover error")]
     TransactionProvingError(#[from] TransactionProverError),
-    #[error("transaction request error")]
+    #[error(transparent)]
     TransactionRequestError(#[from] TransactionRequestError),
-    #[error("transaction script builder error")]
+    #[error(transparent)]
     TransactionScriptBuilderError(#[from] TransactionScriptBuilderError),
     #[error("transaction script error")]
     TransactionScriptError(#[source] TransactionScriptError),
+    #[error("pool pair not found in account storage")]
+    PoolPairNotFoundInAccountStorage(AccountId),
 }
 
 // CONVERSIONS

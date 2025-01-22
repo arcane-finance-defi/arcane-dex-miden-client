@@ -49,6 +49,7 @@ struct SerializedOutputNoteData {
     pub expected_height: u32,
     pub state_discriminant: u8,
     pub state: Vec<u8>,
+    pub tag: Option<Vec<u8>>,
 }
 
 /// Represents the parts retrieved from the database to build an `InputNoteRecord`.
@@ -391,6 +392,7 @@ pub fn upsert_output_note_tx(
             metadata,
             nullifier,
             expected_height,
+            tag,
             state_discriminant,
             state
         ) VALUES (
@@ -400,6 +402,7 @@ pub fn upsert_output_note_tx(
             :metadata,
             :nullifier,
             :expected_height,
+            :tag,
             :state_discriminant,
             :state
         );";
@@ -408,6 +411,7 @@ pub fn upsert_output_note_tx(
         id,
         assets,
         metadata,
+        tag,
         nullifier,
         recipient_digest,
         expected_height,
@@ -426,6 +430,7 @@ pub fn upsert_output_note_tx(
             ":expected_height": expected_height,
             ":state_discriminant": state_discriminant,
             ":state": state,
+            ":tag": tag.map_or(Value::Null, |tag| Value::Blob(tag)),
         },
     )?;
 
@@ -570,6 +575,12 @@ fn serialize_output_note(note: &OutputNoteRecord) -> Result<SerializedOutputNote
     let state_discriminant = note.state().discriminant();
     let state = note.state().to_bytes();
 
+    let tag  = if note.metadata().tag().inner() != 0 {
+        Some(note.metadata().tag().to_bytes())
+    } else {
+        None
+    };
+
     Ok(SerializedOutputNoteData {
         id,
         assets,
@@ -579,6 +590,7 @@ fn serialize_output_note(note: &OutputNoteRecord) -> Result<SerializedOutputNote
         expected_height: note.expected_height(),
         state_discriminant,
         state,
+        tag,
     })
 }
 

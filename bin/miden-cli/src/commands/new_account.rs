@@ -1,7 +1,7 @@
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use miden_client::{
     accounts::{
-        AccountBuilder, AccountStorageMode, AccountType, BasicFungibleFaucetComponent,
+        AccountBuilder, AccountType, BasicFungibleFaucetComponent,
         BasicWalletComponent, RpoFalcon512Component,
     },
     assets::TokenSymbol,
@@ -11,23 +11,8 @@ use miden_client::{
 };
 
 use crate::{
-    commands::account::maybe_set_default_account, utils::load_config_file, CLIENT_BINARY_NAME,
+    commands::account::maybe_set_default_account, utils::{account::CliAccountStorageMode, load_config_file}, CLIENT_BINARY_NAME,
 };
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum CliAccountStorageMode {
-    Private,
-    Public,
-}
-
-impl From<CliAccountStorageMode> for AccountStorageMode {
-    fn from(cli_mode: CliAccountStorageMode) -> Self {
-        match cli_mode {
-            CliAccountStorageMode::Private => AccountStorageMode::Private,
-            CliAccountStorageMode::Public => AccountStorageMode::Public,
-        }
-    }
-}
 
 #[derive(Debug, Parser, Clone)]
 /// Create a new faucet account.

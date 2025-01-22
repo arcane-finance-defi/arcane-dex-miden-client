@@ -15,17 +15,7 @@ use miden_client::{
 use rand::Rng;
 mod commands;
 use commands::{
-    account::AccountCmd,
-    export::ExportCmd,
-    import::ImportCmd,
-    init::InitCmd,
-    new_account::{NewFaucetCmd, NewWalletCmd},
-    new_transactions::{ConsumeNotesCmd, MintCmd, SendCmd, SwapCmd},
-    notes::NotesCmd,
-    sync::SyncCmd,
-    tags::TagsCmd,
-    transactions::TransactionCmd,
-    new_pool::NewPoolCmd,
+    account::AccountCmd, export::ExportCmd, import::ImportCmd, init::InitCmd, new_account::{NewFaucetCmd, NewWalletCmd}, new_order::NewOrderCmd, new_pool::NewPoolCmd, new_transactions::{ConsumeNotesCmd, MintCmd, SendCmd, SwapCmd}, notes::NotesCmd, sync::SyncCmd, tags::TagsCmd, transactions::TransactionCmd
 };
 
 use self::utils::load_config_file;
@@ -66,6 +56,7 @@ pub enum Command {
     Notes(NotesCmd),
     Sync(SyncCmd),
     NewPool(NewPoolCmd),
+    NewOrder(NewOrderCmd),
     /// View a summary of the current client state.
     Info,
     Tags(TagsCmd),
@@ -141,6 +132,7 @@ impl Cli {
             Command::Swap(swap) => swap.execute(client).await,
             Command::ConsumeNotes(consume_notes) => consume_notes.execute(client).await,
             Command::NewPool(new_pool) => new_pool.execute(client).await,
+            Command::NewOrder(new_order) => new_order.execute(client).await,
         }
     }
 }
