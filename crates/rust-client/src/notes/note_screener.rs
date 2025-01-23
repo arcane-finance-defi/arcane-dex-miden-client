@@ -10,7 +10,7 @@ use miden_objects::{
 use thiserror::Error;
 
 use super::script_roots::{P2ID, P2IDR, SWAP};
-use crate::store::{Store, StoreError};
+use crate::store::{AccountFilter, Store, StoreError};
 
 /// Describes the relevance of a note based on the screening.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -61,7 +61,7 @@ impl NoteScreener {
         &self,
         note: &Note,
     ) -> Result<Vec<NoteConsumability>, NoteScreenerError> {
-        let account_ids = BTreeSet::from_iter(self.store.get_account_ids().await?);
+        let account_ids = BTreeSet::from_iter(self.store.get_account_ids(AccountFilter::All).await?);
 
         let script_hash = note.script().hash().to_string();
         let note_relevance = match script_hash.as_str() {

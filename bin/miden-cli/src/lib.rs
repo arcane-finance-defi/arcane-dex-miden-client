@@ -7,15 +7,14 @@ use miden_client::{
     crypto::{FeltRng, RpoRandomCoin},
     rpc::TonicRpcClient,
     store::{
-        sqlite_store::SqliteStore, NoteFilter as ClientNoteFilter, OutputNoteRecord, Store,
-        StoreAuthenticator,
+        sqlite_store::SqliteStore, AccountFilter, NoteFilter as ClientNoteFilter, OutputNoteRecord, Store, StoreAuthenticator
     },
     Client, ClientError, Felt, IdPrefixFetchError,
 };
 use rand::Rng;
 mod commands;
 use commands::{
-    account::AccountCmd, export::ExportCmd, import::ImportCmd, init::InitCmd, new_account::{NewFaucetCmd, NewWalletCmd}, new_order::NewOrderCmd, new_pool::NewPoolCmd, new_transactions::{ConsumeNotesCmd, MintCmd, SendCmd, SwapCmd}, notes::NotesCmd, order::OrderCmd, sync::SyncCmd, tags::TagsCmd, transactions::TransactionCmd
+    account::AccountCmd, export::ExportCmd, import::ImportCmd, init::InitCmd, new_account::{NewFaucetCmd, NewWalletCmd}, new_order::NewOrderCmd, new_pool::NewPoolCmd, new_transactions::{ConsumeNotesCmd, MintCmd, SendCmd, SwapCmd}, notes::NotesCmd, operator::OperatorCmd, order::OrderCmd, sync::SyncCmd, tags::TagsCmd, transactions::TransactionCmd
 };
 
 use self::utils::load_config_file;
@@ -58,6 +57,7 @@ pub enum Command {
     Sync(SyncCmd),
     NewPool(NewPoolCmd),
     NewOrder(NewOrderCmd),
+    Operator(OperatorCmd),
     /// View a summary of the current client state.
     Info,
     Tags(TagsCmd),
@@ -135,6 +135,8 @@ impl Cli {
             Command::ConsumeNotes(consume_notes) => consume_notes.execute(client).await,
             Command::NewPool(new_pool) => new_pool.execute(client).await,
             Command::NewOrder(new_order) => new_order.execute(client).await,
+            Command::Operator(operator) => operator.execute(client).await,
+
         }
     }
 }
@@ -215,7 +217,7 @@ async fn get_account_with_id_prefix(
     account_id_prefix: &str,
 ) -> Result<AccountHeader, IdPrefixFetchError> {
     let mut accounts = client
-        .get_account_headers()
+        .get_account_headers(AccountFilter::All)
         .await
         .map_err(|err| {
             tracing::error!("Error when fetching all accounts from the store: {err}");

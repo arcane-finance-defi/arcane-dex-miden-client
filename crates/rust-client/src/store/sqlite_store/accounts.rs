@@ -13,7 +13,7 @@ use miden_tx::utils::{Deserializable, Serializable};
 use rusqlite::{params, types::Value, Connection, Transaction};
 
 use super::SqliteStore;
-use crate::store::{AccountRecord, AccountStatus, StoreError};
+use crate::store::{AccountFilter, AccountRecord, AccountStatus, StoreError};
 
 // TYPES
 // ================================================================================================
@@ -35,10 +35,14 @@ impl SqliteStore {
     // ACCOUNTS
     // --------------------------------------------------------------------------------------------
 
-    pub(super) fn get_account_ids(conn: &mut Connection) -> Result<Vec<AccountId>, StoreError> {
-        const QUERY: &str = "SELECT DISTINCT id FROM accounts";
+    pub(super) fn get_account_ids(conn: &mut Connection, filter: AccountFilter) -> Result<Vec<AccountId>, StoreError> {
+        let condition: String = match filter {
+            AccountFilter::All => String::new(),
+            AccountFilter::CodeCommitment(code) => format!("WHERE code_root = {}", code.to_string().clone()),
+        };
+        let query = format!("SELECT DISTINCT id FROM accounts {}", condition);
 
-        conn.prepare(QUERY)?
+        conn.prepare(query.as_str())?
             .query_map([], |row| row.get(0))
             .expect("no binding parameters used in query")
             .map(|result| {
@@ -50,13 +54,17 @@ impl SqliteStore {
 
     pub(super) fn get_account_headers(
         conn: &mut Connection,
+        filter: AccountFilter,
     ) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError> {
-        const QUERY: &str =
-            "SELECT a.id, a.nonce, a.vault_root, a.storage_root, a.code_root, a.account_seed, a.locked \
+        let condition: String = match filter {
+            AccountFilter::All => String::new(),
+            AccountFilter::CodeCommitment(code) => format!("AND code_root = \"{}\"", code.to_string().clone()),
+        };
+        let query = format!("SELECT a.id, a.nonce, a.vault_root, a.storage_root, a.code_root, a.account_seed, a.locked \
             FROM accounts a \
-            WHERE a.nonce = (SELECT MAX(b.nonce) FROM accounts b WHERE b.id = a.id)";
+            WHERE a.nonce = (SELECT MAX(b.nonce) FROM accounts b WHERE b.id = a.id) {}", condition);
 
-        conn.prepare(QUERY)?
+        conn.prepare(query.as_str())?
             .query_map([], parse_accounts_columns)
             .expect("no binding parameters used in query")
             .map(|result| Ok(result?).and_then(parse_accounts))

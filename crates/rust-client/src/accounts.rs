@@ -19,7 +19,7 @@ use miden_objects::{accounts::AuthSecretKey, crypto::rand::FeltRng, Digest, Word
 
 use super::Client;
 use crate::{
-    store::{AccountRecord, AccountStatus},
+    store::{AccountFilter, AccountRecord, AccountStatus},
     ClientError,
 };
 
@@ -115,8 +115,9 @@ impl<R: FeltRng> Client<R> {
     /// Said accounts' state is the state after the last performed sync.
     pub async fn get_account_headers(
         &self,
+        filter: AccountFilter,
     ) -> Result<Vec<(AccountHeader, AccountStatus)>, ClientError> {
-        self.store.get_account_headers().await.map_err(|err| err.into())
+        self.store.get_account_headers(filter).await.map_err(|err| err.into())
     }
 
     /// Retrieves a full [AccountRecord] object for the specified `account_id`. This result
@@ -303,7 +304,7 @@ pub mod tests {
             .into_iter()
             .map(|account_data| account_data.account)
             .collect();
-        let accounts = client.get_account_headers().await.unwrap();
+        let accounts = client.get_account_headers(AccountFilter::All).await.unwrap();
 
         assert_eq!(accounts.len(), 2);
         for (client_acc, expected_acc) in accounts.iter().zip(expected_accounts.iter()) {

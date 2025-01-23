@@ -1,6 +1,8 @@
-use miden_objects::{accounts::AccountId, crypto::rand::FeltRng, notes::{ Note, NoteId, NoteRecipient, NoteTag, Nullifier }};
+use alloc::vec::Vec;
 
-use crate::{Client, ClientError};
+use miden_objects::{accounts::AccountId, crypto::rand::FeltRng, notes::{ Note, NoteId, NoteRecipient, NoteTag, Nullifier }, Word};
+
+use crate::{store::OrderFilter, Client, ClientError};
 
 pub struct InsertOrderData {
     note_id: NoteId,
@@ -47,13 +49,23 @@ pub struct OrderInfo {
     note_id: NoteId,
     pool_id: AccountId,
     receiver_account_id: AccountId,
+    recipient_serial_num: Word,
+    response_note_tag: NoteTag,
     asset_in_faucet_id: AccountId,
     asset_amount: u64,
 }
 
 impl OrderInfo {
-    pub fn new(note_id: NoteId, pool_id: AccountId, receiver_account_id: AccountId, asset_in_faucet_id: AccountId, asset_amount: u64) -> Self {
-        Self { note_id, pool_id, receiver_account_id, asset_in_faucet_id, asset_amount }
+    pub fn new(
+        note_id: NoteId, 
+        pool_id: AccountId, 
+        receiver_account_id: AccountId, 
+        recipient_serial_num: Word, 
+        response_note_tag: NoteTag, 
+        asset_in_faucet_id: AccountId, 
+        asset_amount: u64
+    ) -> Self {
+        Self { note_id, pool_id, receiver_account_id, recipient_serial_num, response_note_tag, asset_in_faucet_id, asset_amount }
     }
 
     pub fn note_id(&self) -> &NoteId {
@@ -66,6 +78,14 @@ impl OrderInfo {
 
     pub fn receiver_account_id(&self) -> &AccountId {
         &self.receiver_account_id
+    }
+
+    pub fn recipient_serial_num(&self) -> &Word {
+        &self.recipient_serial_num
+    }
+
+    pub fn response_note_tag(&self) -> &NoteTag {
+        &self.response_note_tag
     }
 
     pub fn asset_in_faucet_id(&self) -> &AccountId {
@@ -89,5 +109,9 @@ impl<R: FeltRng> Client<R> {
 
     pub async fn get_order(&self, order_note_id: NoteId) -> Result<Option<OrderInfo>, ClientError> {
         self.store.get_order(order_note_id).await.map_err(ClientError::StoreError)
+    }
+
+    pub async fn get_orders(&self, pool_id: AccountId, filter: OrderFilter) -> Result<Vec<OrderInfo>, ClientError> {
+        self.store.get_orders(pool_id, filter).await.map_err(ClientError::StoreError)
     }
 }

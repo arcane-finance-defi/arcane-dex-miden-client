@@ -20,7 +20,7 @@ use crate::{
     rpc::domain::{
         notes::CommittedNote, nullifiers::NullifierUpdate, transactions::TransactionUpdate,
     },
-    store::{InputNoteRecord, NoteFilter, OutputNoteRecord, TransactionFilter},
+    store::{AccountFilter, InputNoteRecord, NoteFilter, OutputNoteRecord, TransactionFilter},
     Client, ClientError,
 };
 
@@ -195,7 +195,7 @@ impl<R: FeltRng> Client<R> {
 
         let accounts: Vec<AccountHeader> = self
             .store
-            .get_account_headers()
+            .get_account_headers(AccountFilter::All)
             .await?
             .into_iter()
             .map(|(acc_header, _)| acc_header)

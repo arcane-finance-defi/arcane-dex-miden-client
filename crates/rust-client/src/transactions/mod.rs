@@ -8,7 +8,6 @@ use alloc::{
     vec::Vec,
 };
 use core::fmt::{self};
-use std::println;
 
 pub use miden_lib::transaction::TransactionKernel;
 use miden_objects::{

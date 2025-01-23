@@ -1,9 +1,6 @@
 use clap::Parser;
 use miden_client::{
-    accounts::{Account, AccountId, AccountType, StorageSlot},
-    assets::Asset,
-    crypto::FeltRng,
-    Client, ZERO,
+    accounts::{Account, AccountId, AccountType, StorageSlot}, assets::Asset, crypto::FeltRng, store::AccountFilter, Client, ZERO
 };
 
 use crate::{
@@ -91,7 +88,7 @@ impl AccountCmd {
 // ================================================================================================
 
 async fn list_accounts<R: FeltRng>(client: Client<R>) -> Result<(), String> {
-    let accounts = client.get_account_headers().await?;
+    let accounts = client.get_account_headers(AccountFilter::All).await?;
 
     let mut table =
         create_dynamic_table(&["Account ID", "Type", "Storage Mode", "Nonce", "Status"]);

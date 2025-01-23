@@ -11,8 +11,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::*;
 
 use super::{
-    AccountRecord, AccountStatus, ChainMmrNodeFilter, InputNoteRecord, NoteFilter,
-    OutputNoteRecord, Store, StoreError, TransactionFilter,
+    AccountFilter, AccountRecord, AccountStatus, ChainMmrNodeFilter, InputNoteRecord, NoteFilter, OrderFilter, OutputNoteRecord, Store, StoreError, TransactionFilter
 };
 use crate::{
     order::{InsertOrderData, OrderInfo}, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
@@ -162,7 +161,7 @@ impl Store for WebStore {
         self.update_account(new_account_state).await
     }
 
-    async fn get_account_ids(&self) -> Result<Vec<AccountId>, StoreError> {
+    async fn get_account_ids(&self, _filter: AccountFilter) -> Result<Vec<AccountId>, StoreError> {
         self.get_account_ids().await
     }
 
@@ -173,7 +172,7 @@ impl Store for WebStore {
         self.get_account_auth_by_pub_key(pub_key)
     }
 
-    async fn get_account_headers(&self) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError> {
+    async fn get_account_headers(&self, _filter: AccountFilter) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError> {
         self.get_account_headers().await
     }
 
@@ -224,15 +223,19 @@ impl Store for WebStore {
         self.get_unspent_input_note_nullifiers().await
     }
 
-    async fn insert_order(&self, order: InsertOrderData) -> Result<(), StoreError> {
+    async fn insert_order(&self, _order: InsertOrderData) -> Result<(), StoreError> {
         unimplemented!()
     }
 
-    async fn find_order_result(&self, order_note_id: NoteId) -> Result<Option<Note>, StoreError> {
+    async fn find_order_result(&self, _order_note_id: NoteId) -> Result<Option<Note>, StoreError> {
         unimplemented!()
     }
 
-    async fn get_order(&self, order_note_id: NoteId) -> Result<Option<OrderInfo>, StoreError> {
+    async fn get_order(&self, _order_note_id: NoteId) -> Result<Option<OrderInfo>, StoreError> {
+        unimplemented!()
+    }
+
+    async fn get_orders(&self, _pool_id: AccountId, _filter: OrderFilter) -> Result<Vec<OrderInfo>, StoreError> {
         unimplemented!()
     }
 }

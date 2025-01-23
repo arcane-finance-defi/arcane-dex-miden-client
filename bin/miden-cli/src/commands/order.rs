@@ -1,5 +1,5 @@
 use clap::Parser;
-use miden_client::{crypto::FeltRng, notes::{Note, NoteId}, order::OrderInfo, store::AccountRecord, transactions::{TransactionRequest, TransactionRequestBuilder}, Client};
+use miden_client::{crypto::FeltRng, notes::{Note, NoteId}, order::OrderInfo, store::AccountRecord, transactions::TransactionRequestBuilder, Client};
 
 use crate::{create_dynamic_table, utils::{pool::Pool, transaction::execute_transaction}, CLIENT_BINARY_NAME};
 
@@ -13,7 +13,7 @@ pub struct OrderCmd {
 }
 
 impl OrderCmd {
-    pub async fn execute(&self, mut client: Client<impl FeltRng>) -> Result<(), String> {
+    pub async fn execute(&self, client: Client<impl FeltRng>) -> Result<(), String> {
         match self {
             OrderCmd { show: Some(id), .. } => show_order(client, id.clone()).await,
             OrderCmd { claim: Some(id), .. } => claim_order(client, id.clone()).await,
@@ -55,15 +55,19 @@ async fn show_order(client: Client<impl FeltRng>, id: String) -> Result<(), Stri
     let order = client.get_order(order_note_id).await?;
 
     if let Some(order) = order {
-        let order_result = client.find_order_result(order_note_id).await?;
         let pool_account = client.get_account(order.pool_id().clone()).await?;
 
         print_order(order.clone(), pool_account)?;
 
+        let order_result = client.find_order_result(order_note_id).await?;
+
         if let Some(order_result) = order_result {
+            println!("Order executed!\n");
             print_order_result(order_result.clone())?;
 
             println!("You can claim the result with command: `{CLIENT_BINARY_NAME} order -c {order_note_id}`");
+        } else {
+            println!("Order still pending\n");
         }
     } else {
         println!("Order not found");
@@ -113,7 +117,6 @@ fn print_order(order: OrderInfo, pool_account: Option<AccountRecord>) -> Result<
 
 
 fn print_order_result(order_result: Note) -> Result<(), String> {
-    println!("Order executed!\n");
     println!("Order result:");
     println!("Result note id: {}", order_result.id().to_string());
 

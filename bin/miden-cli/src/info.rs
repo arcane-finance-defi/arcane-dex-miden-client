@@ -1,6 +1,6 @@
 use std::fs;
 
-use miden_client::{crypto::FeltRng, store::NoteFilter, Client};
+use miden_client::{crypto::FeltRng, store::{AccountFilter, NoteFilter}, Client};
 
 use super::config::CliConfig;
 
@@ -19,7 +19,7 @@ async fn print_client_stats(client: &Client<impl FeltRng>) -> Result<(), String>
     println!("Block number: {}", client.get_sync_height().await.map_err(|e| e.to_string())?);
     println!(
         "Tracked accounts: {}",
-        client.get_account_headers().await.map_err(|e| e.to_string())?.len()
+        client.get_account_headers(AccountFilter::All).await.map_err(|e| e.to_string())?.len()
     );
     println!(
         "Expected notes: {}",

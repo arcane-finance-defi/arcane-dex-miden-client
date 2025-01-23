@@ -196,13 +196,13 @@ pub trait Store: Send + Sync {
     // --------------------------------------------------------------------------------------------
 
     /// Returns the account IDs of all accounts stored in the database.
-    async fn get_account_ids(&self) -> Result<Vec<AccountId>, StoreError>;
+    async fn get_account_ids(&self, filter: AccountFilter) -> Result<Vec<AccountId>, StoreError>;
 
     /// Returns a list of [AccountHeader] of all accounts stored in the database along with their
     /// statuses.
     ///
     /// Said accounts' state is the state after the last performed sync.
-    async fn get_account_headers(&self) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError>;
+    async fn get_account_headers(&self, filter: AccountFilter) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError>;
 
     /// Retrieves an [AccountHeader] object for the specified [AccountId] along with its status.
     /// Returns `None` if the account is not found.
@@ -310,6 +310,8 @@ pub trait Store: Send + Sync {
     async fn find_order_result(&self, order_note_id: NoteId) -> Result<Option<Note>, StoreError>;
 
     async fn get_order(&self, order_note_id: NoteId) -> Result<Option<OrderInfo>, StoreError>;
+
+    async fn get_orders(&self, pool_id: AccountId, filter: OrderFilter) -> Result<Vec<OrderInfo>, StoreError>;
 }
 
 // CHAIN MMR NODE FILTER
@@ -334,6 +336,22 @@ pub enum TransactionFilter {
     /// Filter by transactions that haven't yet been committed to the blockchain as per the last
     /// sync.
     Uncomitted,
+}
+
+#[derive(Debug, Clone)]
+pub enum AccountFilter {
+    /// Return all accounts.
+    All,
+    /// Filter by account code commitment.
+    CodeCommitment(Digest),
+}
+
+#[derive(Debug, Clone)]
+pub enum OrderFilter {
+    /// Return all accounts.
+    All,
+    /// Filter by account code commitment.
+    Pending,
 }
 
 // NOTE FILTER

@@ -16,8 +16,7 @@ use rusqlite::{vtab::array, Connection};
 use tonic::async_trait;
 
 use super::{
-    AccountRecord, AccountStatus, ChainMmrNodeFilter, InputNoteRecord, NoteFilter,
-    OutputNoteRecord, Store, TransactionFilter,
+    AccountFilter, AccountRecord, AccountStatus, ChainMmrNodeFilter, InputNoteRecord, NoteFilter, OrderFilter, OutputNoteRecord, Store, TransactionFilter
 };
 use crate::{
     order::{InsertOrderData, OrderInfo}, store::StoreError, sync::{NoteTagRecord, StateSyncUpdate}, transactions::{TransactionRecord, TransactionStoreUpdate}
@@ -256,12 +255,12 @@ impl Store for SqliteStore {
             .await
     }
 
-    async fn get_account_ids(&self) -> Result<Vec<AccountId>, StoreError> {
-        self.interact_with_connection(SqliteStore::get_account_ids).await
+    async fn get_account_ids(&self, filter: AccountFilter) -> Result<Vec<AccountId>, StoreError> {
+        self.interact_with_connection(move |conn| SqliteStore::get_account_ids(conn, filter)).await
     }
 
-    async fn get_account_headers(&self) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError> {
-        self.interact_with_connection(SqliteStore::get_account_headers).await
+    async fn get_account_headers(&self, filter: AccountFilter) -> Result<Vec<(AccountHeader, AccountStatus)>, StoreError> {
+        self.interact_with_connection(move |conn| SqliteStore::get_account_headers(conn, filter)).await
     }
 
     async fn get_account_auth_by_pub_key(
@@ -347,6 +346,11 @@ impl Store for SqliteStore {
 
     async fn get_order(&self, order_note_id: NoteId) -> Result<Option<OrderInfo>, StoreError> {
         self.interact_with_connection(move |conn| SqliteStore::get_order(conn, order_note_id))
+            .await
+    }
+
+    async fn get_orders(&self, pool_id: AccountId, filter: OrderFilter) -> Result<Vec<OrderInfo>, StoreError> {
+        self.interact_with_connection(move |conn| SqliteStore::get_orders(conn, pool_id, filter))
             .await
     }
 }

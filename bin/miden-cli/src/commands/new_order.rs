@@ -1,11 +1,11 @@
 use clap::Parser;
 use miden_client::{
-    crypto::FeltRng, order::InsertOrderData, transactions::{CreateOrderTransactionData, TransactionRequestBuilder}, Client, Felt
+    crypto::FeltRng, order::InsertOrderData, store::AccountFilter, transactions::{CreateOrderTransactionData, TransactionRequestBuilder}, Client
 };
 
 use crate::{
     create_dynamic_table, utils::{
-        get_input_acc_id_by_prefix_or_default, load_faucet_details_map, parse_account_id, pool::{is_pool_account, Pool}, transaction::{
+        get_input_acc_id_by_prefix_or_default, load_faucet_details_map, parse_account_id, pool::{Pool, pool_account_code_commitment}, transaction::{
             execute_transaction, 
             NoteType
         }, SHARED_TOKEN_DOCUMENTATION
@@ -61,16 +61,14 @@ impl NewOrderCmd {
 
         if self.pool_account_id.is_none() {
             println!("You have to provide a pool account ID\n Select one from the list");
-            let accounts = client.get_account_headers().await?;
+            let accounts = client.get_account_headers(AccountFilter::CodeCommitment(pool_account_code_commitment())).await?;
             let mut filetered_accounts = vec![];
 
             for (account_header, _) in accounts {
                 let record = client.get_account(account_header.id()).await?.unwrap();
-                if is_pool_account(&record.account()).unwrap() && record.account().nonce().ne(&Felt::new(0)) {
-                    let pool = Pool::from(record.account().clone());
-                    if pool.is_asset_supported(asset_in.faucet_id()).unwrap() && pool.is_asset_supported(asset_out_faucet_id).unwrap() {
-                        filetered_accounts.push(record.account().clone());
-                    }
+                let pool = Pool::from(record.account().clone());
+                if pool.is_asset_supported(asset_in.faucet_id()).unwrap() && pool.is_asset_supported(asset_out_faucet_id).unwrap() {
+                    filetered_accounts.push(record.account().clone());
                 }
             }
 

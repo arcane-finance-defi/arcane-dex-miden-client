@@ -13,7 +13,7 @@ use miden_objects::{
         merkle::{InnerNodeInfo, MerkleStore},
         rand::FeltRng,
     },
-    notes::{Note, NoteAssets, NoteDetails, NoteExecutionMode, NoteId, NoteRecipient, NoteTag, NoteType},
+    notes::{Note, NoteDetails, NoteExecutionMode, NoteId, NoteRecipient, NoteTag, NoteType},
     transaction::{OutputNote, TransactionScript},
     vm::AdviceMap,
     Digest, Felt, FieldElement,
