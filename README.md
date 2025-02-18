@@ -43,6 +43,12 @@ We use `make` to encapsulate some tasks, such as running lints and tests. You ca
 make
 ```
 
+## Install
+
+```bash
+cargo install --locked --path bin/miden-cli
+```
+
 ## Testing
 
 To test the project's code, we provide both unit tests (which can be run with `cargo test`) and integration tests. For more info on integration tests, refer to the [integration testing document](./tests/README.md)
